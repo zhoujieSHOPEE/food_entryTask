@@ -1,0 +1,48 @@
+syntax = "proto3";
+option go_package = "./";
+package proto;
+
+/*
+获取用户最感兴趣的几个店铺的proto文件
+ */
+
+message Position{
+  /*用户的经纬度构成的位置*/
+  double longitude = 1;
+  double latitude = 2;
+}
+
+message OutletRequest{
+  /*用户的请求，包括用户的id，位置，需要返回的店铺数目以及城市id*/
+  int64 userId = 1;
+  Position pos = 2;
+  int32 listNum = 3;
+  int32 cityId = 4;
+}
+
+message RetMessage{
+  /*返回的消息结构，包括店铺距离用户的位置，店铺的logoURL，店铺的名字，
+  地址，售出数量
+   */
+  string distance = 1;
+  string logoURL = 2;
+  string name = 3;
+  string address = 4;
+  string itemsSold = 5;
+}
+
+message OutletResponse{
+  /*
+  服务器对请求的返回，包括请求是否成功的状态码，返回的RetMessage的数量以及RetMessage的列表
+   */
+  int32 code = 1; // 0表示成功，1表示失败
+  int32 listNum = 2;
+  repeated RetMessage list = 3;
+}
+
+service GetBestStoresService{
+  /*
+  获得用户最感兴趣的listNum个店铺
+   */
+  rpc GetBestStoresList(OutletRequest) returns (OutletResponse);
+}
