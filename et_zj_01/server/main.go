@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	pb "et_zj_01/proto"
+	st "et_zj_01/server/sqlTool"
 	"fmt"
 	"google.golang.org/grpc"
 	"log"
@@ -13,7 +14,7 @@ import (
 )
 
 type server struct {
-	pb.UnimplementedGetBestStoresServiceServer
+	//pb.UnimplementedGetBestStoresServiceServer
 }
 
 const (
@@ -28,7 +29,7 @@ func (*server) GetBestStoresList (ctx context.Context, req *pb.OutletRequest) (*
 	cityId := req.CityId
 	pos := req.Pos
 
-	outletsSlice, err := FindOutletsByCityId(int(cityId))
+	outletsSlice, err := st.FindOutletsByCityId(int(cityId))
 
 	if err != nil {
 		log.Fatalf("failed to get outlets: %v", err)
@@ -129,7 +130,6 @@ func Normalization(i, j float64) (float64, float64) {
 	if i == 0 || j == 0{
 		return i,j
 	}
-
 	if i > j{
 		j = j/i
 		i = 1

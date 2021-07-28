@@ -1,9 +1,9 @@
-package main
+package sqlTool
 
 import (
-	"database/sql"
-	"fmt"
-	_ "github.com/go-sql-driver/mysql"
+"database/sql"
+"fmt"
+_ "github.com/go-sql-driver/mysql"
 )
 
 type Outlets struct {
