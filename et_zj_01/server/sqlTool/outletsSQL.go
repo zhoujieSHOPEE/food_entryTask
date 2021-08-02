@@ -1,9 +1,12 @@
 package sqlTool
 
 import (
-"database/sql"
-"fmt"
-_ "github.com/go-sql-driver/mysql"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"log"
+	"time"
 )
 
 type Outlets struct {
@@ -37,6 +40,16 @@ type Outlets struct {
 	Sharding string
 }
 
+func (o Outlets) MarshalBinary() ([]byte, error) {
+	bytes, err := json.Marshal(o)
+	return bytes, err
+}
+
+func (o Outlets) UnmarshalBinary(data []byte) error{
+	err := json.Unmarshal(data, o)
+	return err
+}
+
 var db *sql.DB
 
 func init() {
@@ -56,11 +69,16 @@ func initDB() (err error) {
 	if err != nil {
 		return err
 	}
+
+	db.SetMaxIdleConns(64)
+	db.SetMaxOpenConns(64)
+	db.SetConnMaxLifetime(time.Minute)
 	return nil
 }
 
-func queryMultiRowDemo(CityId int) ([]Outlets, error){
-	sqlStr := "select distinct Name, longitude, latitude, Logo_url, address, items_sold from outlets where City_id = ?"
+func queryMultiRowDemoByCity(CityId int) ([]Outlets, error){
+	sqlStr := "select distinct id, Name, longitude, latitude, Logo_url, address, items_sold from outlets where City_id = ?"
+	fmt.Println(CityId)
 	rows, err := db.Query(sqlStr, CityId)
 	if err != nil {
 		fmt.Printf("query failed, err:%v\n", err)
@@ -76,7 +94,7 @@ func queryMultiRowDemo(CityId int) ([]Outlets, error){
 	var outletsSlice []Outlets
 	for rows.Next() {
 		var o Outlets
-		err := rows.Scan(&o.Name, &o.Longitude, &o.Latitude, &o.LogoURL, &o.Address, &o.ItemsSold)
+		err := rows.Scan(&o.Id, &o.Name, &o.Longitude, &o.Latitude, &o.LogoURL, &o.Address, &o.ItemsSold)
 		//outletsList.PushFront(o)
 		outletsSlice = append(outletsSlice, o)
 		if err != nil {
@@ -88,10 +106,71 @@ func queryMultiRowDemo(CityId int) ([]Outlets, error){
 	return outletsSlice, nil
 }
 
+func queryMultiRowDemoById(Id int) (Outlets, error){
+	sqlStr := "select distinct id, Name, longitude, latitude, Logo_url, address, items_sold from outlets where id = ?"
+	//fmt.Println(Id)
+	row := db.QueryRow(sqlStr, Id)
+	//fmt.Println(Id)
+	// 非常重要：关闭rows释放持有的数据库链接
+	var o Outlets
+	err := row.Scan(&o.Id, &o.Name, &o.Longitude, &o.Latitude, &o.LogoURL, &o.Address, &o.ItemsSold)
+	if err != nil {
+		log.Printf("scan failed, err:%v\n", err)
+	}
+
+	return o, nil
+}
+
+func queryMultiRowDemo() ([]Outlets, error){
+	sqlStr := "select distinct id, Name, longitude, latitude, Logo_url, address, items_sold from outlets"
+	rows, err := db.Query(sqlStr)
+	if err != nil {
+		fmt.Printf("query failed, err:%v\n", err)
+		return nil, err
+	}
+	// 非常重要：关闭rows释放持有的数据库链接
+	defer rows.Close()
+
+	// 循环读取结果集中的数据
+
+	//var outletsList *list.List = list.New()
+	var outletsSlice []Outlets
+	for rows.Next() {
+		var o Outlets
+		err := rows.Scan(&o.Id, &o.Name, &o.Longitude, &o.Latitude, &o.LogoURL, &o.Address, &o.ItemsSold)
+		//outletsList.PushFront(o)
+		outletsSlice = append(outletsSlice, o)
+		if err != nil {
+			fmt.Printf("scan failed, err:%v\n", err)
+			return nil, err
+		}
+		//fmt.Printf("Name:%s Longitude:%f latitude:%f\n", o.Name, o.Longitude, o.Latitude)
+	}
+	return outletsSlice, nil
+}
 
 func FindOutletsByCityId(CityId int) ([]Outlets, error){
 
-	outletsSlice, err := queryMultiRowDemo(CityId)
+	outletsSlice, err := queryMultiRowDemoByCity(CityId)
+	if err != nil {
+		fmt.Printf("get outletsList fail,err:%v\n", err)
+		return nil, err
+	}
+	return outletsSlice, nil
+}
+
+func FindOutletsById(Id int) (Outlets, error){
+
+	outlets, err := queryMultiRowDemoById(Id)
+	if err != nil {
+		log.Printf("get outlets by id fail : %v", err)
+	}
+	return outlets, nil
+}
+
+func FindAllOutlets() ([]Outlets, error){
+
+	outletsSlice, err := queryMultiRowDemo()
 	if err != nil {
 		fmt.Printf("get outletsList fail,err:%v\n", err)
 		return nil, err

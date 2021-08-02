@@ -17,15 +17,15 @@ const (
 	port = ":81"
 )
 
-// 127.0.0.1/get_list?longitude=&latitude=&list_num=&city_id=
+
 var conn *grpc.ClientConn
 func main()  {
 	router := gin.Default()
-	conn, _ = grpc.Dial(address, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1024*1024*4)))
+	conn, _ = grpc.Dial(address, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1024*1024*4)), grpc.WithTimeout(time.Second*50))
 	router.Use(func(c *gin.Context) {
 		now := time.Now()
 		c.Next()
-		fmt.Println(time.Since(now).Seconds())
+		fmt.Println("请求总耗时：", time.Since(now).Seconds())
 	})
 
 	router.GET("/getBestStoresList", getBestStoresList)

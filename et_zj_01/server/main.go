@@ -25,18 +25,17 @@ func (*server) GetBestStoresList (ctx context.Context, req *pb.OutletRequest) (*
 	/*
 		仅根据店铺距离用户的距离和店铺销量对店铺打分推荐
 	*/
-	fmt.Println("server get the service, start the service...")
-	cityId := req.CityId
+	//fmt.Println("server get the service, start the service...")
 	pos := req.Pos
-
-	outletsSlice, err := st.FindOutletsByCityId(int(cityId))
-
-	if err != nil {
-		log.Fatalf("failed to get outlets: %v", err)
-	}
-
+	//cityId := int(req.CityId)
+	//now := time.Now()
+	outletsSlice := st.GetNearStore(pos.Longitude, pos.Latitude)
+	//fmt.Println("getNearStore耗时:", time.Since(now))
+	//outletsSlice, _ := st.FindOutletsByCityId(cityId)
+	//outletsSlice, _ := st.FindAllOutlets()
+	//距离的计算多余，之前其实已经有了，下一步改进
 	var retMessageList []*pb.RetMessage
-
+	//now = time.Now()
 	for _,v := range outletsSlice{
 		itemsSold := strconv.Itoa(v.ItemsSold)
 		storeMessage := &pb.RetMessage{
@@ -47,17 +46,21 @@ func (*server) GetBestStoresList (ctx context.Context, req *pb.OutletRequest) (*
 		}
 		distance := GeoDistance(pos.Longitude, pos.Latitude,  v.Longitude, v.Latitude)
 		storeMessage.Distance = fmt.Sprintf("%f", distance)
-
 		retMessageList = append(retMessageList, storeMessage)
 	}
+	//fmt.Println("填写距离并且写回的耗时：", time.Since(now))
 
+	//now = time.Now()
 	sort.Sort(RetMessageWrapper{retMessageList})
-	res := &pb.OutletResponse{Code: 0,List: retMessageList,ListNum: cityId}
+	//fmt.Println("排序耗时：", time.Since(now))
+	res := &pb.OutletResponse{Code: 0,List: retMessageList,ListNum: req.ListNum}
 	return res, nil
 }
 
 func main(){
+	//now := time.Now()
 	lis, err := net.Listen("tcp", port)
+
 	if err != nil{
 		log.Fatalf("failed to listen : %v", err)
 	}
@@ -68,7 +71,7 @@ func main(){
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-
+	//fmt.Println("服务器端准备耗时:", time.Since(now))
 }
 
 func GeoDistance(lng1 float64, lat1 float64, lng2 float64, lat2 float64, unit ...string) float64 {
