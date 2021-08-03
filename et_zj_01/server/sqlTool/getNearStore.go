@@ -15,7 +15,7 @@ func GetNearStore(longitude, latitude float64) []Outlets {
 	defer fmt.Println("exit getNearStore")
 
 	resRadiu, err := rdb.GeoRadius(ctx,"outlets", longitude, latitude, &redis.GeoRadiusQuery{
-		Radius:      25,
+		Radius:      15,
 		Unit:        "km",
 		WithCoord:   true,
 		WithGeoHash: true,
