@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"log"
-	"math"
 	"net"
 	"sort"
 	"strconv"
@@ -25,32 +24,28 @@ func (*server) GetBestStoresList (ctx context.Context, req *pb.OutletRequest) (*
 	/*
 		仅根据店铺距离用户的距离和店铺销量对店铺打分推荐
 	*/
-	//fmt.Println("server get the service, start the service...")
+	defer fmt.Println("service finish")
+	fmt.Println("server get the service, start the service...")
 	pos := req.Pos
-	//cityId := int(req.CityId)
-	//now := time.Now()
+
 	outletsSlice := st.GetNearStore(pos.Longitude, pos.Latitude)
 	//fmt.Println("getNearStore耗时:", time.Since(now))
 	//outletsSlice, _ := st.FindOutletsByCityId(cityId)
 	//outletsSlice, _ := st.FindAllOutlets()
 	//距离的计算多余，之前其实已经有了，下一步改进
 	var retMessageList []*pb.RetMessage
-	//now = time.Now()
 	for _,v := range outletsSlice{
 		itemsSold := strconv.Itoa(v.ItemsSold)
-		storeMessage := &pb.RetMessage{
+		retMessage := &pb.RetMessage{
 			Name: v.Name,
 			Address: v.Address,
 			LogoURL: v.LogoURL,
 			ItemsSold: itemsSold,
+			Distance: fmt.Sprintf("%fkm", v.Dist),
 		}
-		distance := GeoDistance(pos.Longitude, pos.Latitude,  v.Longitude, v.Latitude)
-		storeMessage.Distance = fmt.Sprintf("%f", distance)
-		retMessageList = append(retMessageList, storeMessage)
+		retMessageList = append(retMessageList, retMessage)
 	}
-	//fmt.Println("填写距离并且写回的耗时：", time.Since(now))
 
-	//now = time.Now()
 	sort.Sort(RetMessageWrapper{retMessageList})
 	//fmt.Println("排序耗时：", time.Since(now))
 	res := &pb.OutletResponse{Code: 0,List: retMessageList,ListNum: req.ListNum}
@@ -60,7 +55,6 @@ func (*server) GetBestStoresList (ctx context.Context, req *pb.OutletRequest) (*
 func main(){
 	//now := time.Now()
 	lis, err := net.Listen("tcp", port)
-
 	if err != nil{
 		log.Fatalf("failed to listen : %v", err)
 	}
@@ -74,35 +68,28 @@ func main(){
 	//fmt.Println("服务器端准备耗时:", time.Since(now))
 }
 
-func GeoDistance(lng1 float64, lat1 float64, lng2 float64, lat2 float64, unit ...string) float64 {
-	const PI float64 = 3.141592653589793
-
-	radlat1 := float64(PI * lat1 / 180)
-	radlat2 := float64(PI * lat2 / 180)
-
-	theta := float64(lng1 - lng2)
-	radtheta := float64(PI * theta / 180)
-
-	dist := math.Sin(radlat1)*math.Sin(radlat2) + math.Cos(radlat1)*math.Cos(radlat2)*math.Cos(radtheta)
-
-	if dist > 1 {
-		dist = 1
-	}
-
-	dist = math.Acos(dist)
-	dist = dist * 180 / PI
-	dist = dist * 60 * 1.1515
-
-	if len(unit) > 0 {
-		if unit[0] == "K" {
-			dist = dist * 1.609344
-		} else if unit[0] == "N" {
-			dist = dist * 0.8684
-		}
-	}
-
-	return dist
-}
+//func GeoDistance(lng1 float64, lat1 float64, lng2 float64, lat2 float64, unit ...string) float64 {
+//	const PI float64 = 3.141592653589793
+//	radlat1 := float64(PI * lat1 / 180)
+//	radlat2 := float64(PI * lat2 / 180)
+//	theta := float64(lng1 - lng2)
+//	radtheta := float64(PI * theta / 180)
+//	dist := math.Sin(radlat1)*math.Sin(radlat2) + math.Cos(radlat1)*math.Cos(radlat2)*math.Cos(radtheta)
+//	if dist > 1 {
+//		dist = 1
+//	}
+//	dist = math.Acos(dist)
+//	dist = dist * 180 / PI
+//	dist = dist * 60 * 1.1515
+//	if len(unit) > 0 {
+//		if unit[0] == "K" {
+//			dist = dist * 1.609344
+//		} else if unit[0] == "N" {
+//			dist = dist * 0.8684
+//		}
+//	}
+//	return dist
+//}
 
 type RetMessageWrapper struct {
 	retMessages []*pb.RetMessage
@@ -124,12 +111,15 @@ func (sm RetMessageWrapper) Less(i, j int) bool{
 	itemsSold2, _ := strconv.ParseFloat(sm.retMessages[j].ItemsSold, 64)
 	dis1, dis2 = Normalization(dis1, dis2)
 	itemsSold1, itemsSold2 = Normalization(itemsSold1, itemsSold2)
-	score1 := itemsSold1 * dis2
-	score2 := itemsSold2 * dis1
+	score1 := 0.4*itemsSold1 + 0.6*dis2
+	score2 := 0.4*itemsSold2 + 0.6*dis1
 	return score1 > score2
 }
 
 func Normalization(i, j float64) (float64, float64) {
+	/*
+	对两个数归一化
+	 */
 	if i == 0 || j == 0{
 		return i,j
 	}

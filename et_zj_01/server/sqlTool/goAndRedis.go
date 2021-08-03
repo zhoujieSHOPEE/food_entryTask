@@ -30,7 +30,7 @@ func InitClient(ctx context.Context) (rdb *redis.Client) {
 	return rdb
 }
 
-var rdb *redis.Client = InitClient(context.Background())
+var rdb = InitClient(context.Background())
 
 func getAllDataFromMySQLToRedis() {
 
@@ -44,7 +44,6 @@ func getAllDataFromMySQLToRedis() {
 		if err != nil {
 			log.Fatalf("struct to bytes fail : %v", err)
 		}
-		//fmt.Println(datas)
 		rdb.Set(ctx, intToString(v.Id), datas, time.Hour*12)
 		// 接着存储了所有订单的地理位置信息
 		rdb.GeoAdd(ctx, "outlets", &redis.GeoLocation{
@@ -56,7 +55,6 @@ func getAllDataFromMySQLToRedis() {
 }
 
 func intToString(i int) string {
-
 	s := strconv.Itoa(i)
 	return s
 }

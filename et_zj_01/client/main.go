@@ -2,9 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"time"
-
 	pb "et_zj_01/proto"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
@@ -21,13 +18,11 @@ const (
 var conn *grpc.ClientConn
 func main()  {
 	router := gin.Default()
-	conn, _ = grpc.Dial(address, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1024*1024*4)), grpc.WithTimeout(time.Second*50))
-	router.Use(func(c *gin.Context) {
-		now := time.Now()
-		c.Next()
-		fmt.Println("请求总耗时：", time.Since(now).Seconds())
-	})
-
+	var err error
+	conn, err = grpc.Dial(address, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1024*1024*4)))
+	if err != nil {
+		log.Fatalf("grpc Dial fail : %v", err)
+	}
 	router.GET("/getBestStoresList", getBestStoresList)
 	router.Run(port)
 
@@ -51,12 +46,10 @@ func getBestStoresList(c *gin.Context) {
 	if err != nil {
 		log.Fatalf("could not getStoresList: %v", err)
 	}
-	log.Printf("getStoresList: %d", r.GetCode())
 	for i,v := range r.List{
 		if i == int(listNum){
 			break
 		}
-		//fmt.Println(v)
 		c.IndentedJSON(200, gin.H{
 			"name": v.Name,
 			"distance": v.Distance,

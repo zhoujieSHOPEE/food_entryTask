@@ -38,6 +38,7 @@ type Outlets struct {
 	HeadImages string
 	Chemas string `gorm:"column:chemas"`
 	Sharding string
+	Dist float64
 }
 
 func (o Outlets) MarshalBinary() ([]byte, error) {

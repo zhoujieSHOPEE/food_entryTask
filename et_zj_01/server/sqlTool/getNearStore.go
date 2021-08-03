@@ -3,6 +3,7 @@ package sqlTool
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/go-redis/redis"
 	"log"
 )
@@ -10,10 +11,11 @@ import (
 var ctx = context.Background()
 
 func GetNearStore(longitude, latitude float64) []Outlets {
-	//fmt.Println("into GetNearStore")
-	//now := time.Now()
+	fmt.Println("enter getNearStore")
+	defer fmt.Println("exit getNearStore")
+
 	resRadiu, err := rdb.GeoRadius(ctx,"outlets", longitude, latitude, &redis.GeoRadiusQuery{
-		Radius:      5,
+		Radius:      25,
 		Unit:        "km",
 		WithCoord:   true,
 		WithGeoHash: true,
@@ -21,8 +23,7 @@ func GetNearStore(longitude, latitude float64) []Outlets {
 		Count:       1000,
 		Sort:        "ASC",
 	}).Result()
-	//fmt.Println("pos:1")
-	//fmt.Println("georaius耗时：", time.Since(now))
+
 	if err != nil {
 		log.Fatalf("get outlet location from redis fail : %v", err)
 	}
@@ -33,21 +34,24 @@ func GetNearStore(longitude, latitude float64) []Outlets {
 	outletsListFromRedis := make([]Outlets, 0)
 	for _, v := range resRadiu {
 		bytes, _ := rdb.Get(ctx, v.Name).Bytes()
+		//fmt.Println(bytes)
 		o2 := &Outlets{}
 		json.Unmarshal(bytes, o2)
+		o2.Dist = v.Dist
 		outletsListFromRedis = append(outletsListFromRedis, *o2)
 	}
-	//fmt.Println("pos:2")
 
-
-	//outletsListFromMysql := make([]Outlets, 0)
-	//for _, v := range resRadiu {
-	//	atoi, _ := strconv.Atoi(v.Name)
-	//	o, err := FindOutletsById(atoi)
-	//	if err != nil {
-	//		log.Println("get outlets from findoutletsbyid fail : %v", err)
-	//	}
-	//	outletsListFromMysql = append(outletsListFromMysql, o)
-	//}
+	/*
+	//这是从Redis中获得店铺id以后再从mysql中获得详细信息的方法
+	outletsListFromMysql := make([]Outlets, 0)
+	for _, v := range resRadiu {
+		atoi, _ := strconv.Atoi(v.Name)
+		o, err := FindOutletsById(atoi)
+		if err != nil {
+			log.Println("get outlets from findoutletsbyid fail : %v", err)
+		}
+		outletsListFromMysql = append(outletsListFromMysql, o)
+	}
+	 */
 	return outletsListFromRedis
 }
