@@ -29,6 +29,7 @@ func (*server) GetBestStoresList (ctx context.Context, req *pb.OutletRequest) (*
 	pos := req.Pos
 
 	outletsSlice := st.GetNearStore(pos.Longitude, pos.Latitude)
+	//outletsSlice := st.GetTopSale(1000)
 	//fmt.Println("getNearStore耗时:", time.Since(now))
 	//outletsSlice, _ := st.FindOutletsByCityId(cityId)
 	//outletsSlice, _ := st.FindAllOutlets()

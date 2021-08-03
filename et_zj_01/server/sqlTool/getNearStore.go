@@ -23,7 +23,7 @@ func GetNearStore(longitude, latitude float64) []Outlets {
 		Count:       1000,
 		Sort:        "ASC",
 	}).Result()
-
+	fmt.Println(len(resRadiu))
 	if err != nil {
 		log.Fatalf("get outlet location from redis fail : %v", err)
 	}
