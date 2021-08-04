@@ -28,7 +28,7 @@ func (*server) GetBestStoresList (ctx context.Context, req *pb.OutletRequest) (*
 	fmt.Println("server get the service, start the service...")
 	pos := req.Pos
 
-	outletsSlice := st.GetNearStore(pos.Longitude, pos.Latitude)
+	outletsSlice, err := st.GetNearStore(pos.Longitude, pos.Latitude)
 	//outletsSlice := st.GetTopSale(1000)
 	//fmt.Println("getNearStore耗时:", time.Since(now))
 	//outletsSlice, _ := st.FindOutletsByCityId(cityId)
@@ -50,7 +50,7 @@ func (*server) GetBestStoresList (ctx context.Context, req *pb.OutletRequest) (*
 	sort.Sort(RetMessageWrapper{retMessageList})
 	//fmt.Println("排序耗时：", time.Since(now))
 	res := &pb.OutletResponse{Code: 0,List: retMessageList,ListNum: req.ListNum}
-	return res, nil
+	return res, err
 }
 
 func main(){
@@ -110,10 +110,13 @@ func (sm RetMessageWrapper) Less(i, j int) bool{
 
 	itemsSold1, _ := strconv.ParseFloat(sm.retMessages[i].ItemsSold, 64)
 	itemsSold2, _ := strconv.ParseFloat(sm.retMessages[j].ItemsSold, 64)
-	dis1, dis2 = Normalization(dis1, dis2)
-	itemsSold1, itemsSold2 = Normalization(itemsSold1, itemsSold2)
-	score1 := 0.4*itemsSold1 + 0.6*dis2
-	score2 := 0.4*itemsSold2 + 0.6*dis1
+	//dis1, dis2 = Normalization(dis1, dis2)
+	//itemsSold1, itemsSold2 = Normalization(itemsSold1, itemsSold2)
+	//score1 := 0.4*itemsSold1 + 0.6*dis2
+	//score2 := 0.4*itemsSold2 + 0.6*dis1
+
+	score1 := itemsSold1/(1+dis1)
+	score2 := itemsSold2/(1+dis2)
 	return score1 > score2
 }
 

@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	pb "et_zj_01/proto"
+	st "et_zj_01/server/sqlTool"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 	"log"
+	"net/http"
 	"strconv"
 )
 
@@ -44,13 +47,31 @@ func getBestStoresList(c *gin.Context) {
 
 	r, err := client.GetBestStoresList(context.Background(), &pb.OutletRequest{Pos:&pos, ListNum:listNum, CityId:cityId})
 	if err != nil {
-		log.Fatalf("could not getStoresList: %v", err)
+		fmt.Printf("could not getStoresList: %v", err)
+
+		// 加一个简便的降级策略
+		outletsSlice, err := st.GetNearStore(pos.Longitude, pos.Latitude)
+		if err != nil {
+			log.Fatalf("simple downgrade strategy fail : %v", err)
+		}
+		for i,v := range outletsSlice{
+			if i == int(listNum){
+				break
+			}
+			c.IndentedJSON(http.StatusOK, gin.H{
+				"name": v.Name,
+				"distance": v.Dist,
+				"logo_url": v.LogoURL,
+				"address": v.Address,
+				"itemsSold": v.ItemsSold,
+			})
+		}
 	}
 	for i,v := range r.List{
 		if i == int(listNum){
 			break
 		}
-		c.IndentedJSON(200, gin.H{
+		c.IndentedJSON(http.StatusOK, gin.H{
 			"name": v.Name,
 			"distance": v.Distance,
 			"logo_url": v.LogoURL,

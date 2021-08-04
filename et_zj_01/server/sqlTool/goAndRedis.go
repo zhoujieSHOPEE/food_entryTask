@@ -44,7 +44,7 @@ func getAllDataFromMySQLToRedis() {
 		if err != nil {
 			log.Fatalf("struct to bytes fail : %v", err)
 		}
-		rdb.Set(ctx, intToString(v.Id), datas, time.Hour*12)
+		rdb.Set(ctx, intToString(v.Id), datas, time.Hour*24*7)
 		// 接着存储了所有订单的地理位置信息
 		rdb.GeoAdd(ctx, "outlets", &redis.GeoLocation{
 			Name: intToString(v.Id),

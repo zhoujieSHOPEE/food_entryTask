@@ -10,7 +10,7 @@ import (
 
 var ctx = context.Background()
 
-func GetNearStore(longitude, latitude float64) []Outlets {
+func GetNearStore(longitude, latitude float64) ([]Outlets, error) {
 	fmt.Println("enter getNearStore")
 	defer fmt.Println("exit getNearStore")
 
@@ -53,5 +53,5 @@ func GetNearStore(longitude, latitude float64) []Outlets {
 		outletsListFromMysql = append(outletsListFromMysql, o)
 	}
 	 */
-	return outletsListFromRedis
+	return outletsListFromRedis, err
 }
