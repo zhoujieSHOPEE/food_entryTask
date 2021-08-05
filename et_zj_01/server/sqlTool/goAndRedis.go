@@ -18,10 +18,6 @@ func InitClient(ctx context.Context) (rdb *redis.Client) {
 		DB:       0,   // use default DB
 		PoolSize: 64, // 连接池大小
 		MinIdleConns: 64,
-		//DialTimeout: 1*time.Second,
-		//ReadTimeout: 800*time.Millisecond,
-		//WriteTimeout: 800*time.Millisecond,
-		//PoolTimeout: 900*time.Millisecond,
 	})
 	_, err := rdb.Ping(ctx).Result()
 	if err != nil{

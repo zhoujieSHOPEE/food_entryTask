@@ -2,7 +2,6 @@ package sqlTool
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
@@ -10,14 +9,14 @@ import (
 )
 
 type Outlets struct {
-	Id int `gorm:"not null;unique"`
-	Name string `gorm:"column:Name"`
-	Status int `gorm:"column:Status"`
-	IsOfflinePaymentSupported int	`gorm:"column:is_offline_payment_supported"`
-	LogoURL string `gorm:"column:Logo_url"`
+	Id int
+	Name string
+	Status int
+	IsOfflinePaymentSupported int
+	LogoURL string
 	ImageURLList string
-	CityId int `gorm:"column:City_id"`
-	City string `gorm:"column:City"`
+	CityId int
+	City string
 	District string
 	Longitude float64
 	Latitude float64
@@ -25,31 +24,31 @@ type Outlets struct {
 	ItemsSold int
 	MerchantId int
 	MsOutletId int
-	CreateTime int `gorm:"column:Create_time"`
-	UpdateTime int `gorm:"column:Update_time"`
-	DisplayStatus int `gorm:"column:Display_status"`
-	TypeId int `gorm:"column:Type_id"`
-	BrandId int `gorm:"column:Brand_id"`
-	Location string `gorm:"column:Location"`
-	LocationId int `gorm:"column:Location_id"`
+	CreateTime int
+	UpdateTime int
+	DisplayStatus int
+	TypeId int
+	BrandId int
+	Location string
+	LocationId int
 	IsBScanCPaymentSupported int
 	IsCScanBpaymentSupported int
 	CardImage string
 	HeadImages string
-	Chemas string `gorm:"column:chemas"`
+	Chemas string
 	Sharding string
 	Dist float64
 }
 
-func (o Outlets) MarshalBinary() ([]byte, error) {
-	bytes, err := json.Marshal(o)
-	return bytes, err
-}
-
-func (o Outlets) UnmarshalBinary(data []byte) error{
-	err := json.Unmarshal(data, o)
-	return err
-}
+//func (o Outlets) MarshalBinary() ([]byte, error) {
+//	bytes, err := json.Marshal(o)
+//	return bytes, err
+//}
+//
+//func (o Outlets) UnmarshalBinary(data []byte) error{
+//	err := json.Unmarshal(data, o)
+//	return err
+//}
 
 var db *sql.DB
 
@@ -150,6 +149,32 @@ func queryMultiRowDemo() ([]Outlets, error){
 	return outletsSlice, nil
 }
 
+func queryMultiRowDemoWithLimit(l int) ([]int, error){
+	sqlStr := "select id from outlets order by items_sold desc limit ?"
+	rows, err := db.Query(sqlStr, l)
+	if err != nil {
+		fmt.Printf("query failed, err:%v\n", err)
+		return nil, err
+	}
+	// 非常重要：关闭rows释放持有的数据库链接
+	defer rows.Close()
+
+	// 循环读取结果集中的数据
+
+	//var outletsList *list.List = list.New()
+	var idSlice []int
+	for rows.Next() {
+		var i int
+		err := rows.Scan(&i)
+		idSlice = append(idSlice, i)
+		if err != nil {
+			fmt.Printf("scan failed, err:%v\n", err)
+			return nil, err
+		}
+	}
+	return idSlice, nil
+}
+
 func FindOutletsByCityId(CityId int) ([]Outlets, error){
 
 	outletsSlice, err := queryMultiRowDemoByCity(CityId)
@@ -177,4 +202,13 @@ func FindAllOutlets() ([]Outlets, error){
 		return nil, err
 	}
 	return outletsSlice, nil
+}
+
+func FindOrderedOutletsWithLimit(limit int) ([]int, error){
+	idSlice, err := queryMultiRowDemoWithLimit(limit)
+	if err != nil {
+		fmt.Printf("get outletsList fail,err:%v\n", err)
+		return nil, err
+	}
+	return idSlice, nil
 }
