@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	pb "et_zj_01/proto"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 	"log"
@@ -35,8 +34,7 @@ func getBestStoresList(c *gin.Context) {
 	longitude := stringToFloat64(c.Query("longitude"))
 	latitude := stringToFloat64(c.Query("latitude"))
 	listNum := stringToInt32(c.Query("list_num"))
-	cityId := stringToInt32(c.Query("city_id"))
-
+	method := stringToInt32(c.Query("method"))
 	client := pb.NewGetBestStoresServiceClient(conn)
 
 	pos := pb.Position{
@@ -44,31 +42,12 @@ func getBestStoresList(c *gin.Context) {
 		Latitude: latitude,
 	}
 
-	r, err := client.GetBestStoresList(context.Background(), &pb.OutletRequest{Pos:&pos, ListNum:listNum, CityId:cityId})
+	r, err := client.GetBestStoresList(context.Background(), &pb.OutletRequest{Pos:&pos, ListNum:listNum, Method: method})
 	if err != nil {
-		fmt.Printf("could not getStoresList: %v", err)
-
-		//// 加一个简便的降级策略
-		//outletsSlice, err := st.GetNearStore(pos.Longitude, pos.Latitude)
-		//if err != nil {
-		//	panic(123)
-		//	log.Fatalf("simple downgrade strategy fail : %v", err)
-		//}
-		//for i,v := range outletsSlice{
-		//	if i == int(listNum){
-		//		break
-		//	}
-		//	c.IndentedJSON(http.StatusOK, gin.H{
-		//		"name": v.Name,
-		//		"distance": fmt.Sprintf("%fkm", v.Dist),
-		//		"logo_url": v.LogoURL,
-		//		"address": v.Address,
-		//		"itemsSold": v.ItemsSold,
-		//	})
-		//}
+		log.Fatalf("could not getStoresList: %v", err)
 	}
 	for i,v := range r.List{
-		if i == int(listNum){
+		if i == int(15){
 			break
 		}
 		c.IndentedJSON(http.StatusOK, gin.H{

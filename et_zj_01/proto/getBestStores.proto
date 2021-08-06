@@ -13,11 +13,11 @@ message Position{
 }
 
 message OutletRequest{
-  /*用户的请求，包括用户的id，位置，需要返回的店铺数目以及城市id*/
+  /*用户的请求，包括用户的id，位置，需要返回的店铺数目以及召回方式*/
   int64 userId = 1;
   Position pos = 2;
   int32 listNum = 3;
-  int32 cityId = 4;
+  int32 method = 4; // method有1，2，3三个值。1代表按距离召回，2代表按照itemsSold召回，3代表1，2混合。
 }
 
 message RetMessage{
@@ -42,7 +42,7 @@ message OutletResponse{
 
 service GetBestStoresService{
   /*
-  获得用户最感兴趣的listNum个店铺
+  获得用户最感兴趣的特定个店铺
    */
   rpc GetBestStoresList(OutletRequest) returns (OutletResponse);
 }
