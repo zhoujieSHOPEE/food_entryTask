@@ -252,7 +252,7 @@ end
 
 `wrk -t 20 -c 100 -d 60 -s request_distance.lua --latency "http://127.0.0.1:81"`
 
-![image-20210809154213630](/Users/zhoujie/Library/Application Support/typora-user-images/image-20210809154213630.png)
+![image-20210809154213630](./img/image-20210809154213630.png)
 
 20个线程，100个并发数条件下QPS为4581.31，P99在94.18ms左右。
 
