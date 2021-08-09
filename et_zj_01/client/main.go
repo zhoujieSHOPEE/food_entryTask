@@ -33,7 +33,7 @@ func getBestStoresList(c *gin.Context) {
 
 	longitude := stringToFloat64(c.Query("longitude"))
 	latitude := stringToFloat64(c.Query("latitude"))
-	listNum := stringToInt32(c.Query("list_num"))
+	listNum := stringToInt32(c.Query("listNum"))
 	method := stringToInt32(c.Query("method"))
 	client := pb.NewGetBestStoresServiceClient(conn)
 
@@ -46,19 +46,14 @@ func getBestStoresList(c *gin.Context) {
 	if err != nil {
 		log.Fatalf("could not getStoresList: %v", err)
 	}
-	for i,v := range r.List{
-		if i == int(15){
-			break
-		}
-		c.IndentedJSON(http.StatusOK, gin.H{
-			"name": v.Name,
-			"distance": v.Distance,
-			"logo_url": v.LogoURL,
-			"address": v.Address,
-			"itemsSold": v.ItemsSold,
-		})
+	if len(r.List) > int(listNum) {
+		r.List = r.List[0:listNum]
 	}
-
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"status" : "success",
+		"listNum" : listNum,
+		"list": r.List,
+	})
 }
 
 func stringToFloat64(str string) float64 {

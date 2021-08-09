@@ -20,9 +20,9 @@ func TestSlice(t *testing.T)  {
 	fmt.Println(s)
 
 	datas, _ := json.Marshal(s)
-	rdb.Set(ctx, "test", datas, time.Hour*1)
+	rdb1.Set(ctx, "test", datas, time.Hour*1)
 
-	datas, _ = rdb.Get(ctx, "test").Bytes()
+	datas, _ = rdb1.Get(ctx, "test").Bytes()
 	var o []string
 	json.Unmarshal(datas, &o)
 	fmt.Println(o)

@@ -2,43 +2,14 @@ package sqlTool
 
 import (
 	"database/sql"
+	ent "et_zj_01/server/entity"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"time"
 )
 
-type Outlets struct {
-	Id int
-	Name string
-	Status int
-	IsOfflinePaymentSupported int
-	LogoURL string
-	ImageURLList string
-	CityId int
-	City string
-	District string
-	Longitude float64
-	Latitude float64
-	Address string
-	ItemsSold int
-	MerchantId int
-	MsOutletId int
-	CreateTime int
-	UpdateTime int
-	DisplayStatus int
-	TypeId int
-	BrandId int
-	Location string
-	LocationId int
-	IsBScanCPaymentSupported int
-	IsCScanBpaymentSupported int
-	CardImage string
-	HeadImages string
-	Chemas string
-	Sharding string
-	Dist float64
-}
+
 
 //func (o Outlets) MarshalBinary() ([]byte, error) {
 //	bytes, err := json.Marshal(o)
@@ -76,7 +47,7 @@ func initDB() (err error) {
 	return nil
 }
 
-func queryMultiRowDemoByCity(CityId int) ([]Outlets, error){
+func queryMultiRowDemoByCity(CityId int) ([]ent.Outlets, error){
 	sqlStr := "select distinct id, Name, longitude, latitude, Logo_url, address, items_sold from outlets where City_id = ?"
 	fmt.Println(CityId)
 	rows, err := db.Query(sqlStr, CityId)
@@ -91,9 +62,9 @@ func queryMultiRowDemoByCity(CityId int) ([]Outlets, error){
 	// 循环读取结果集中的数据
 
 	//var outletsList *list.List = list.New()
-	var outletsSlice []Outlets
+	var outletsSlice []ent.Outlets
 	for rows.Next() {
-		var o Outlets
+		var o ent.Outlets
 		err := rows.Scan(&o.Id, &o.Name, &o.Longitude, &o.Latitude, &o.LogoURL, &o.Address, &o.ItemsSold)
 		//outletsList.PushFront(o)
 		outletsSlice = append(outletsSlice, o)
@@ -106,13 +77,13 @@ func queryMultiRowDemoByCity(CityId int) ([]Outlets, error){
 	return outletsSlice, nil
 }
 
-func queryMultiRowDemoById(Id int) (Outlets, error){
+func queryMultiRowDemoById(Id int) (ent.Outlets, error){
 	sqlStr := "select distinct id, Name, longitude, latitude, Logo_url, address, items_sold from outlets where id = ?"
 	//fmt.Println(Id)
 	row := db.QueryRow(sqlStr, Id)
 	//fmt.Println(Id)
 	// 非常重要：关闭rows释放持有的数据库链接
-	var o Outlets
+	var o ent.Outlets
 	err := row.Scan(&o.Id, &o.Name, &o.Longitude, &o.Latitude, &o.LogoURL, &o.Address, &o.ItemsSold)
 	if err != nil {
 		log.Printf("scan failed, err:%v\n", err)
@@ -121,7 +92,7 @@ func queryMultiRowDemoById(Id int) (Outlets, error){
 	return o, nil
 }
 
-func queryMultiRowDemo() ([]Outlets, error){
+func queryMultiRowDemo() ([]ent.Outlets, error){
 	sqlStr := "select distinct id, Name, longitude, latitude, Logo_url, address, items_sold from outlets"
 	rows, err := db.Query(sqlStr)
 	if err != nil {
@@ -134,9 +105,9 @@ func queryMultiRowDemo() ([]Outlets, error){
 	// 循环读取结果集中的数据
 
 	//var outletsList *list.List = list.New()
-	var outletsSlice []Outlets
+	var outletsSlice []ent.Outlets
 	for rows.Next() {
-		var o Outlets
+		var o ent.Outlets
 		err := rows.Scan(&o.Id, &o.Name, &o.Longitude, &o.Latitude, &o.LogoURL, &o.Address, &o.ItemsSold)
 		//outletsList.PushFront(o)
 		outletsSlice = append(outletsSlice, o)
@@ -175,7 +146,7 @@ func queryMultiRowDemoWithLimit(l int) ([]int, error){
 	return idSlice, nil
 }
 
-func FindOutletsByCityId(CityId int) ([]Outlets, error){
+func FindOutletsByCityId(CityId int) ([]ent.Outlets, error){
 
 	outletsSlice, err := queryMultiRowDemoByCity(CityId)
 	if err != nil {
@@ -185,7 +156,7 @@ func FindOutletsByCityId(CityId int) ([]Outlets, error){
 	return outletsSlice, nil
 }
 
-func FindOutletsById(Id int) (Outlets, error){
+func FindOutletsById(Id int) (ent.Outlets, error){
 
 	outlets, err := queryMultiRowDemoById(Id)
 	if err != nil {
@@ -194,7 +165,7 @@ func FindOutletsById(Id int) (Outlets, error){
 	return outlets, nil
 }
 
-func FindAllOutlets() ([]Outlets, error){
+func FindAllOutlets() ([]ent.Outlets, error){
 
 	outletsSlice, err := queryMultiRowDemo()
 	if err != nil {
